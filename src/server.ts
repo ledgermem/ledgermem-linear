@@ -104,8 +104,12 @@ export function buildApp(deps: {
       await handleWebhookPayload(req.body as LinearWebhookPayload, deps.memory);
       res.status(204).end();
     } catch (err: unknown) {
+      // Don't echo the raw error to the webhook caller — Linear surfaces the
+      // response body in the integration UI and SDK errors can include
+      // workspace ids, internal hostnames, or partial GraphQL operation text.
       const msg = err instanceof Error ? err.message : String(err);
-      res.status(500).json({ error: msg });
+      process.stderr.write(`linear webhook handler failed: ${msg}\n`);
+      res.status(500).json({ error: "internal error" });
     }
   });
 
@@ -119,9 +123,29 @@ async function main(): Promise<void> {
     workspaceId: cfg.ledgermemWorkspaceId,
   });
   const app = buildApp({ webhookSecret: cfg.webhookSecret, memory });
-  app.listen(cfg.port, () => {
+  const server = app.listen(cfg.port, () => {
     process.stdout.write(`linear-sync webhook server on :${cfg.port}\n`);
   });
+
+  // Graceful shutdown — drain in-flight ingest calls before exit so SIGTERM
+  // doesn't leave a memory.add half-completed.
+  let shuttingDown = false;
+  const shutdown = (signal: string): void => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    process.stdout.write(`Received ${signal}, draining HTTP server…\n`);
+    const force = setTimeout(() => {
+      process.stderr.write("Shutdown timed out, forcing exit.\n");
+      process.exit(1);
+    }, 15_000);
+    force.unref();
+    server.close(() => {
+      clearTimeout(force);
+      process.exit(0);
+    });
+  };
+  process.once("SIGINT", () => shutdown("SIGINT"));
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
