@@ -45,6 +45,21 @@ function readNested(
   return "";
 }
 
+function readDeepNested(
+  obj: Record<string, unknown>,
+  path: readonly string[],
+): string {
+  let cur: unknown = obj;
+  for (const seg of path) {
+    if (cur && typeof cur === "object" && !Array.isArray(cur)) {
+      cur = (cur as Record<string, unknown>)[seg];
+    } else {
+      return "";
+    }
+  }
+  return typeof cur === "string" ? cur : "";
+}
+
 export async function handleWebhookPayload(
   payload: LinearWebhookPayload,
   memory: MemoryClient,
@@ -64,12 +79,19 @@ export async function handleWebhookPayload(
     });
   } else if (payload.type === "Comment" && payload.action !== "remove") {
     const data = payload.data;
+    // Linear's Comment webhook payload does not put `team` on the comment
+    // itself — the team lives under `issue.team`. Reading data.team.key
+    // returned an empty string and dropped every comment into the
+    // unattributed bucket downstream.
+    const teamKey =
+      readNested(data, "team", "key") ||
+      readDeepNested(data, ["issue", "team", "key"]);
     await ingestComment(memory, {
       id: readString(data, "id"),
       body: readString(data, "body"),
       issueId: readNested(data, "issue", "id"),
       issueIdentifier: readNested(data, "issue", "identifier"),
-      teamKey: readNested(data, "team", "key"),
+      teamKey,
       url: readString(data, "url"),
       authorName: readNested(data, "user", "name"),
     });
