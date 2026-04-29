@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import express, { type Request, type Response } from "express";
-import { LedgerMem } from "@ledgermem/memory";
+import { Mnemo } from "@getmnemo/memory";
 import { loadConfig } from "./config.js";
 import { ingestIssue, ingestComment, type MemoryClient } from "./ingest.js";
 
@@ -140,9 +140,9 @@ export function buildApp(deps: {
 
 async function main(): Promise<void> {
   const cfg = loadConfig();
-  const memory = new LedgerMem({
-    apiKey: cfg.ledgermemApiKey,
-    workspaceId: cfg.ledgermemWorkspaceId,
+  const memory = new Mnemo({
+    apiKey: cfg.getmnemoApiKey,
+    workspaceId: cfg.getmnemoWorkspaceId,
   });
   const app = buildApp({ webhookSecret: cfg.webhookSecret, memory });
   const server = app.listen(cfg.port, () => {
