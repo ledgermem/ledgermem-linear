@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import "dotenv/config";
 import { LinearClient } from "@linear/sdk";
-import { Mnemo } from "@getmnemo/memory";
+import { Mnemo } from "@mnemo/memory";
 import { loadConfig } from "./config.js";
 import { backfillAll } from "./backfill.js";
 

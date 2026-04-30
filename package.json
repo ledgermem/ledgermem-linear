@@ -1,5 +1,5 @@
 {
-  "name": "@getmnemo/linear",
+  "name": "@mnemo/linear",
   "version": "0.1.0",
   "description": "Mnemo Linear connector — backfill + webhook sync of Linear issues and comments.",
   "type": "module",
@@ -19,7 +19,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@getmnemo/memory": "^0.1.0",
+    "@mnemo/memory": "^0.1.0",
     "@linear/sdk": "^29.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0"

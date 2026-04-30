@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import express, { type Request, type Response } from "express";
-import { Mnemo } from "@getmnemo/memory";
+import { Mnemo } from "@mnemo/memory";
 import { loadConfig } from "./config.js";
 import { ingestIssue, ingestComment, type MemoryClient } from "./ingest.js";
 

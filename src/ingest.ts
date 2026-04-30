@@ -1,4 +1,4 @@
-import type { Mnemo } from "@getmnemo/memory";
+import type { Mnemo } from "@mnemo/memory";
 
 export interface MemoryClient {
   add: Mnemo["add"];
